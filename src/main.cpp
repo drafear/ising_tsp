@@ -20,6 +20,7 @@ int main() {
     cout << "[Step " << t << "]" << endl;
     cout << "energy: " << solver.getCurrentEnergy() << endl;
     cout << "spin: " << solver.getCurrentSpin() << endl;
+    cout << "active: " << solver.getActiveNodeCount() << " / " << solver.size() << endl;
     prob.getAnswerFromSpin(solver.getCurrentSpin()).output(cout);
     cout << endl;
   }

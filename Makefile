@@ -1,4 +1,4 @@
-DEPENDENCIES := src/main.o src/mylib.o src/problem.o src/ising_solver.cpp
+DEPENDENCIES := src/main.o src/mylib.o src/problem.o src/ising_solver.o src/random_selector.o
 TARGET := ising
 
 all: $(TARGET)

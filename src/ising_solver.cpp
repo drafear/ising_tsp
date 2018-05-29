@@ -3,16 +3,18 @@
 #include <vector>
 #include <random>
 #include <cassert>
+#include <cmath>
 
 using namespace std;
 
 Edge::Edge(int to, Weight weight) : to(to), weight(weight) {}
 
-IsingSolver::IsingSolver(const Graph& J, const vector<Weight>& h) : J(J), h(h) {}
+IsingSolver::IsingSolver(const Graph& J, const vector<Weight>& h)
+  : random_selector(h.size()), active_ratio(1.0), J(J), h(h) {}
 
 void IsingSolver::init(const IsingSolver::InitMode mode, const int seed) {
+  assert(J.size() == h.size());
   rnd.seed(seed);
-  // rnd = random_device();
   switch (mode) {
     case Negative:
       current_spin.assign(size(), -1);
@@ -33,10 +35,39 @@ void IsingSolver::init(const IsingSolver::InitMode mode) {
   random_device rd;
   init(mode, rd());
 }
+void IsingSolver::randomFlip() {
+}
+void IsingSolver::updateNodes() {
+  vector<int> node_ids = random_selector.select(getActiveNodeCount(), rnd);
+  for (auto&& node_id : node_ids) {
+    updateNode(node_id);
+  }
+}
+void IsingSolver::updateNode(const int node_id) {
+  Weight energy_coe = calcEnergyCoe(current_spin, node_id);
+  if (energy_coe > 0) {
+    current_spin[node_id] = -1;
+  }
+  else if (energy_coe < 0) {
+    current_spin[node_id] = 1;
+  }
+  else {
+    current_spin[node_id] = rnd() % 2 ? 1 : -1;
+  }
+}
+void IsingSolver::cool() {
+  active_ratio *= CoolCoe;
+}
 void IsingSolver::step() {
   if (current_spin.size() != size()) {
     throw new runtime_error("call init method first");
   }
+  randomFlip();
+  updateNodes();
+  cool();
+}
+size_t IsingSolver::getActiveNodeCount() const {
+  return size_t(floor(size() * active_ratio));
 }
 size_t IsingSolver::size() const {
   return h.size();
