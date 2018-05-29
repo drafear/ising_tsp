@@ -61,12 +61,12 @@ std::pair<Graph, vector<Weight>> Problem::getJhForIsing() const {
   rep(i, h.size()) h[i] += 4 * Base * A;
   return ConvertTo01(J, h);
 }
-Answer Problem::getAnswerFromIsing(const Spin& spin) const {
+Answer Problem::getAnswerFromSpin(const vector<int>& spin) const {
   const int n = size();
   vector<int> order;
   rep(step, n) rep(v, n) {
     assert(NODE(step, v) >= 0);
-    assert(NODE(step, v) < spin.size());
+    assert(NODE(step, v) < int(spin.size()));
     if (spin[NODE(step, v)] > 0) {
       order.push_back(v);
       break;
@@ -76,14 +76,14 @@ Answer Problem::getAnswerFromIsing(const Spin& spin) const {
 }
 
 Answer::Answer(const Problem& prob, const vector<int>& order) : prob(prob), order(order) {}
-void Answer::output(ostream& os) {
+void Answer::output(ostream& os) const {
   os << "order: ";
   double sum = 0;
   if (order.size() > 0) {
     rep(i, order.size()+1) {
       if (i) os << " -> ";
-      assert(order[i] >= 0);
-      assert(order[i] < prob.size());
+      assert(order[i % order.size()] >= 0);
+      assert(order[i % order.size()] < int(prob.size()));
       auto point = prob.points[order[i % order.size()]];
       os << "(" << point.real() << ", " << point.imag() << ")";
     }

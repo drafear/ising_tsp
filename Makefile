@@ -1,5 +1,5 @@
 DEPENDENCIES := src/main.o src/mylib.o src/problem.o src/ising_solver.cpp
-TARGET := ising.out
+TARGET := ising
 
 all: $(TARGET)
 
@@ -7,8 +7,8 @@ $(TARGET): $(DEPENDENCIES)
 	g++ $^ -o $@
 
 %.o: %.cpp
-	g++ -std=c++14 -O2 -c $^ -o $@
+	g++ -std=c++14 -Wall -O2 -c $^ -o $@
 
 clean:
-	if [ -e $(TARGET) ]; then rm $(TARGET); fi
-	if [ -e src/*.o ]; then rm src/*.o; fi
+	rm -f $(TARGET)
+	rm -f src/*.o
