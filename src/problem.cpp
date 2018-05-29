@@ -48,7 +48,7 @@ std::pair<Graph, vector<Weight>> Problem::getJhForIsing() const {
       NODE((step+1)%n, j), dist
     );
   }
-  const Weight A = 15;
+  const Weight A = 1000;
   rep(i, n) rep(j, n) rep(k, n) {
     Weight cost = Base * A;
     J[NODE(i, j)].emplace_back(

@@ -19,7 +19,7 @@ using Graph = std::vector<std::vector<Edge>>;
 // s := current_spin
 // s_i: {-1, 1}
 class IsingSolver {
-  const double CoolCoe = 0.99;
+  const double CoolCoe = 0.999;
   const double FlipRatio = 0.99;
   std::mt19937 rnd;
   RandomSelector random_selector;
