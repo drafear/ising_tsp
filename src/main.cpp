@@ -14,15 +14,17 @@ int main() {
   tie(J, h) = Jh;
   IsingSolver solver(J, h);
   solver.init(IsingSolver::InitMode::Random);
-  const int Steps = 1000;
-  rep(t, Steps+1) {
-    if (t > 0) solver.step();
-    cout << "[Step " << t << "]" << endl;
+  int step = 0, zeroStep = 0;
+  while (zeroStep < 10) {
+    if (step > 0) solver.step();
+    cout << "[Step " << step << "]" << endl;
     cout << "energy: " << solver.getCurrentEnergy() << endl;
     cout << "spin: " << solver.getCurrentSpin() << endl;
-    cout << "active: " << solver.getActiveNodeCount() << " / " << solver.size() << endl;
+    cout << "flip: " << solver.getActiveNodeCount() << " / " << solver.size() << endl;
     prob.getAnswerFromSpin(solver.getCurrentSpin()).output(cout);
     cout << endl;
+    if (solver.getActiveNodeCount() == 0) ++zeroStep;
+    ++step;
   }
   cout << "[Answer]" << endl;
   cout << "energy: " << solver.getOptimalEnergy() << endl;

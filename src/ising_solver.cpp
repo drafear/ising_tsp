@@ -45,14 +45,13 @@ void IsingSolver::init(const IsingSolver::InitMode mode) {
   init(mode, rd());
 }
 void IsingSolver::randomFlip() {
-  int flipCount = int(floor(size() * active_ratio * FlipRatio));
-  vector<int> node_ids = random_selector.select(flipCount, rnd);
+  vector<int> node_ids = random_selector.select(getActiveNodeCount(), rnd);
   for (auto&& node_id : node_ids) {
     current_spin[node_id] *= -1;
   }
 }
 void IsingSolver::updateNodes() {
-  vector<int> node_ids = random_selector.select(getActiveNodeCount(), rnd);
+  vector<int> node_ids = random_selector.select(getUpdateNodeCount(), rnd);
   for (auto&& node_id : node_ids) {
     updateNode(node_id);
   }
@@ -88,6 +87,9 @@ void IsingSolver::step() {
 }
 size_t IsingSolver::getActiveNodeCount() const {
   return size_t(floor(size() * active_ratio));
+}
+size_t IsingSolver::getUpdateNodeCount() const {
+  return size_t(floor(size() * UpdateRatio));
 }
 size_t IsingSolver::size() const {
   return h.size();

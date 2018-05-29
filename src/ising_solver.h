@@ -20,7 +20,7 @@ using Graph = std::vector<std::vector<Edge>>;
 // s_i: {-1, 1}
 class IsingSolver {
   const double CoolCoe = 0.999;
-  const double FlipRatio = 0.99;
+  const double UpdateRatio = 0.3;
   std::mt19937 rnd;
   RandomSelector random_selector;
   double active_ratio; // 温度: [0, 1]
@@ -52,6 +52,7 @@ public:
   void init(const InitMode mode);
   void init(const InitMode mode, const int seed);
   size_t getActiveNodeCount() const;
+  size_t getUpdateNodeCount() const;
   size_t size() const;
 };
 
