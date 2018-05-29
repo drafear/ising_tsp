@@ -24,10 +24,10 @@ class IsingSolver {
   std::mt19937 rnd;
   RandomSelector random_selector;
   double active_ratio; // 温度: [0, 1]
-  Graph J; // Σs_i s_j J_{ij}
+  Graph J, revJ; // Σs_i s_j J_{ij}
   std::vector<Weight> h; // Σs_i h_i
   std::vector<int> current_spin, optimal_spin;
-  Weight calcEnergyCoe(const std::vector<int>& spin, const int node_id) const;
+  Weight calcEnergyDiff(const std::vector<int>& spin, const int node_id) const;
   Weight calcEnergy(const std::vector<int>& spin) const;
   // active_ratio に応じた個数をランダムに current_spin を反転させる
   void randomFlip();
@@ -37,6 +37,8 @@ class IsingSolver {
   void updateNode(const int node_id);
   // 温度を下げる
   void cool();
+  // より良い解が見つかったら optimal_spin を更新
+  void updateOptimalSpin();
 public:
   enum InitMode {
     Negative, Positive, Random

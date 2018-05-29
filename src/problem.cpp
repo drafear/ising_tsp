@@ -12,8 +12,8 @@ pair<Graph, vector<Weight>> ConvertTo01(const Graph& J, const vector<Weight>& h)
   vector<Weight> nh(V, 0);
   rep(i, V) nh[i] += 2 * h[i];
   rep(i, V) each(e, J[i]) {
-    nh[i] -= e.weight;
-    nh[e.to] -= e.weight;
+    nh[i] += e.weight;
+    nh[e.to] += e.weight;
   }
   return {J, move(nh)};
 }
@@ -58,7 +58,7 @@ std::pair<Graph, vector<Weight>> Problem::getJhForIsing() const {
       NODE(k, j), cost
     );
   }
-  rep(i, h.size()) h[i] += 4 * Base * A;
+  rep(i, h.size()) h[i] -= 4 * Base * A;
   return ConvertTo01(J, h);
 }
 Answer Problem::getAnswerFromSpin(const vector<int>& spin) const {

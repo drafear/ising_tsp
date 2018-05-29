@@ -14,7 +14,7 @@ int main() {
   tie(J, h) = Jh;
   IsingSolver solver(J, h);
   solver.init(IsingSolver::InitMode::Random);
-  const int Steps = 10;
+  const int Steps = 1000;
   rep(t, Steps+1) {
     if (t > 0) solver.step();
     cout << "[Step " << t << "]" << endl;

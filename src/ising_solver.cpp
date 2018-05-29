@@ -9,8 +9,17 @@ using namespace std;
 
 Edge::Edge(int to, Weight weight) : to(to), weight(weight) {}
 
+Graph reverse(const Graph& G) {
+  const int n = G.size();
+  Graph revG(n);
+  rep(i, n) for (auto&& e : G[i]) {
+    revG[e.to].emplace_back(i, e.weight);
+  }
+  return revG;
+}
+
 IsingSolver::IsingSolver(const Graph& J, const vector<Weight>& h)
-  : random_selector(h.size()), active_ratio(1.0), J(J), h(h) {}
+  : random_selector(h.size()), active_ratio(1.0), J(J), revJ(reverse(J)), h(h) {}
 
 void IsingSolver::init(const IsingSolver::InitMode mode, const int seed) {
   assert(J.size() == h.size());
@@ -36,6 +45,11 @@ void IsingSolver::init(const IsingSolver::InitMode mode) {
   init(mode, rd());
 }
 void IsingSolver::randomFlip() {
+  int flipCount = int(floor(size() * active_ratio * FlipRatio));
+  vector<int> node_ids = random_selector.select(flipCount, rnd);
+  for (auto&& node_id : node_ids) {
+    current_spin[node_id] *= -1;
+  }
 }
 void IsingSolver::updateNodes() {
   vector<int> node_ids = random_selector.select(getActiveNodeCount(), rnd);
@@ -44,11 +58,11 @@ void IsingSolver::updateNodes() {
   }
 }
 void IsingSolver::updateNode(const int node_id) {
-  Weight energy_coe = calcEnergyCoe(current_spin, node_id);
-  if (energy_coe > 0) {
+  Weight energy_diff = calcEnergyDiff(current_spin, node_id);
+  if (energy_diff > 0) {
     current_spin[node_id] = -1;
   }
-  else if (energy_coe < 0) {
+  else if (energy_diff < 0) {
     current_spin[node_id] = 1;
   }
   else {
@@ -58,6 +72,11 @@ void IsingSolver::updateNode(const int node_id) {
 void IsingSolver::cool() {
   active_ratio *= CoolCoe;
 }
+void IsingSolver::updateOptimalSpin() {
+  if (getCurrentEnergy() < getOptimalEnergy()) {
+    optimal_spin = current_spin;
+  }
+}
 void IsingSolver::step() {
   if (current_spin.size() != size()) {
     throw new runtime_error("call init method first");
@@ -65,6 +84,7 @@ void IsingSolver::step() {
   randomFlip();
   updateNodes();
   cool();
+  updateOptimalSpin();
 }
 size_t IsingSolver::getActiveNodeCount() const {
   return size_t(floor(size() * active_ratio));
@@ -72,9 +92,14 @@ size_t IsingSolver::getActiveNodeCount() const {
 size_t IsingSolver::size() const {
   return h.size();
 }
-Weight IsingSolver::calcEnergyCoe(const vector<int>& spin, const int node_id) const {
+Weight IsingSolver::calcEnergyDiff(const vector<int>& spin, const int node_id) const {
   Weight res = h[node_id];
   for (auto&& e : J[node_id]) {
+    if (e.to == node_id) continue;
+    res += spin[e.to] * e.weight;
+  }
+  for (auto&& e : revJ[node_id]) {
+    if (e.to == node_id) continue;
     res += spin[e.to] * e.weight;
   }
   return res;
@@ -82,7 +107,12 @@ Weight IsingSolver::calcEnergyCoe(const vector<int>& spin, const int node_id) co
 Weight IsingSolver::calcEnergy(const vector<int>& spin) const {
   assert(spin.size() == size());
   Weight res{};
-  rep(i, size()) res += spin[i] * calcEnergyCoe(spin, i);
+  rep(i, size()) for (auto&& e : J[i]) {
+    res += spin[i] * spin[e.to] * e.weight;
+  }
+  rep(i, size()) {
+    res += spin[i] * h[i];
+  }
   return res;
 }
 Weight IsingSolver::getCurrentEnergy() const {
