@@ -4,3 +4,4 @@ in.txt
 *.o
 *.out
 ising
+!output/*.out
