@@ -21,9 +21,11 @@ Graph reverse(const Graph& G) {
 IsingSolver::IsingSolver(const Graph& J, const vector<Weight>& h)
   : random_selector(h.size()), active_ratio(1.0), J(J), revJ(reverse(J)), h(h) {}
 
-void IsingSolver::init(const IsingSolver::InitMode mode, const int seed) {
+void IsingSolver::init(const IsingSolver::InitMode mode, const int seed, const double cool_coe, const double update_ratio) {
   assert(J.size() == h.size());
   rnd.seed(seed);
+  this->cool_coe = cool_coe;
+  this->update_ratio = update_ratio;
   switch (mode) {
     case Negative:
       current_spin.assign(size(), -1);
@@ -40,9 +42,9 @@ void IsingSolver::init(const IsingSolver::InitMode mode, const int seed) {
   }
   optimal_spin = current_spin;
 }
-void IsingSolver::init(const IsingSolver::InitMode mode) {
+void IsingSolver::init(const IsingSolver::InitMode mode, const double cool_coe, const double update_ratio) {
   random_device rd;
-  init(mode, rd());
+  init(mode, rd(), cool_coe, update_ratio);
 }
 void IsingSolver::randomFlip() {
   vector<int> node_ids = random_selector.select(getActiveNodeCount(), rnd);
@@ -69,7 +71,7 @@ void IsingSolver::updateNode(const int node_id) {
   }
 }
 void IsingSolver::cool() {
-  active_ratio *= CoolCoe;
+  active_ratio *= cool_coe;
 }
 void IsingSolver::updateOptimalSpin() {
   if (getCurrentEnergy() < getOptimalEnergy()) {
@@ -89,7 +91,7 @@ size_t IsingSolver::getActiveNodeCount() const {
   return size_t(floor(size() * active_ratio));
 }
 size_t IsingSolver::getUpdateNodeCount() const {
-  return size_t(floor(size() * UpdateRatio));
+  return size_t(floor(size() * update_ratio));
 }
 size_t IsingSolver::size() const {
   return h.size();

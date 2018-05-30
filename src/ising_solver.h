@@ -19,8 +19,7 @@ using Graph = std::vector<std::vector<Edge>>;
 // s := current_spin
 // s_i: {-1, 1}
 class IsingSolver {
-  const double CoolCoe = 0.999;
-  const double UpdateRatio = 0.3;
+  double cool_coe, update_ratio;
   std::mt19937 rnd;
   RandomSelector random_selector;
   double active_ratio; // 温度: [0, 1]
@@ -49,8 +48,8 @@ public:
   const std::vector<int>& getCurrentSpin() const;
   const std::vector<int>& getOptimalSpin() const;
   void step();
-  void init(const InitMode mode);
-  void init(const InitMode mode, const int seed);
+  void init(const InitMode mode, const double cool_coe, const double update_ratio);
+  void init(const InitMode mode, const int seed, const double cool_coe, const double update_ratio);
   size_t getActiveNodeCount() const;
   size_t getUpdateNodeCount() const;
   size_t size() const;
