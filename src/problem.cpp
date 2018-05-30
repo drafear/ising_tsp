@@ -48,7 +48,7 @@ std::pair<Graph, vector<Weight>> Problem::getJhForIsing() const {
       NODE((step+1)%n, j), dist
     );
   }
-  const Weight A = 1000;
+  const Weight A = 1e6;
   rep(i, n) rep(j, n) rep(k, n) {
     Weight cost = Base * A;
     J[NODE(i, j)].emplace_back(
@@ -74,20 +74,29 @@ Answer Problem::getAnswerFromSpin(const vector<int>& spin) const {
   }
   return Answer(*this, move(order));
 }
-
+bool Answer::verify() const {
+  if (order.size() != prob.size()) return false;
+  rep(i, order.size()) rep(j, i) {
+    if (order[i] == order[j]) {
+      return false;
+    }
+  }
+  return true;
+}
+// 465970
 Answer::Answer(const Problem& prob, const vector<int>& order) : prob(prob), order(order) {}
-void Answer::output(ostream& os) const {
+void Answer::output(ostream& os, bool is_detail) const {
   os << "order: ";
   double sum = 0;
   if (order.size() > 0) {
     rep(i, order.size()+1) {
-      if (i) os << " -> ";
+      if (i && is_detail) os << " -> ";
       assert(order[i % order.size()] >= 0);
       assert(order[i % order.size()] < int(prob.size()));
       auto point = prob.points[order[i % order.size()]];
-      os << "(" << point.real() << ", " << point.imag() << ")";
+      if (is_detail) os << "(" << point.real() << ", " << point.imag() << ")";
     }
-    os << endl;
+    if (is_detail) os << endl;
     rep(i, order.size()) {
       sum += abs(prob.points[order[(i+1) % order.size()]] - prob.points[order[i]]);
     }

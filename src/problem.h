@@ -20,7 +20,8 @@ class Answer {
   const std::vector<int> order;
 public:
   Answer(const Problem& prob, const std::vector<int>& order);
-  void output(std::ostream& os) const;
+  void output(std::ostream& os, bool is_detail) const;
+  bool verify() const;
 };
 
 #endif
