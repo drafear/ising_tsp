@@ -16,25 +16,24 @@ void run(const cmdline::parser& parser) {
     cerr << "can't open the file: " << input_file_path << endl;
     exit(1);
   }
-  Problem prob = Problem::fromIstream(ifs);
-  auto Jh = prob.getJhForIsing();
-  Graph J;
-  vector<Weight> h;
-  tie(J, h) = Jh;
-  IsingSolver solver(J, h);
+  const Problem prob = Problem::fromIstream(ifs);
+  const CostFunction cf = prob.getCostFunction();
+  IsingSolver solver(cf);
   solver.init(IsingSolver::InitMode::Random, parser.get<double>("cool"), parser.get<double>("update-ratio"));
   bool is_detail = parser.exist("detail");
-  int step = 0, zeroStep = 0;
-  while (zeroStep < 10) {
-    if (step > 0) solver.step();
-    cout << "[Step " << step << "]" << endl;
+  const int ExtraStepCount = 10;
+  bool is_first = true;
+  while (solver.getStep() < solver.getTotalStep()+ExtraStepCount) {
+    if (!is_first) solver.step();
+    else is_first = false;
+    cout << "[Step " << solver.getStep() << " / " << solver.getTotalStep()+ExtraStepCount << "]" << endl;
     cout << "energy: " << solver.getCurrentEnergy() << endl;
     if (is_detail) cout << "spin: " << solver.getCurrentSpin() << endl;
     cout << "flip: " << solver.getActiveNodeCount() << " / " << solver.size() << endl;
-    prob.getAnswerFromSpin(solver.getCurrentSpin()).output(cout, is_detail);
+    Answer ans = prob.getAnswerFromSpin(solver.getCurrentSpin());
+    ans.output(cout, is_detail);
+    cout << "is_answer: " << boolalpha << ans.verify() << endl;
     cout << endl;
-    if (solver.getActiveNodeCount() == 0) ++zeroStep;
-    ++step;
   }
   cout << "[Answer]" << endl;
   cout << "energy: " << solver.getOptimalEnergy() << endl;

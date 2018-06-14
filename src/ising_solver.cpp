@@ -1,5 +1,6 @@
 #include "mylib.h"
 #include "ising_solver.h"
+#include "cost_function.h"
 #include <vector>
 #include <random>
 #include <cassert>
@@ -9,23 +10,25 @@ using namespace std;
 
 Edge::Edge(int to, Weight weight) : to(to), weight(weight) {}
 
-Graph reverse(const Graph& G) {
-  const int n = G.size();
-  Graph revG(n);
-  rep(i, n) for (auto&& e : G[i]) {
-    revG[e.to].emplace_back(i, e.weight);
-  }
-  return revG;
+IsingSolver::IsingSolver(const CostFunction& cf)
+  : steps(0), total_step(0),
+    random_selector(cf.size()), active_ratio(1.0), cf(cf) {}
+
+int IsingSolver::calcTotalStep() const {
+  // return n s.t. size() * cool_coe^n < 1
+  double n = - log(size()) / log(cool_coe);
+  assert(n >= 0);
+  return int(ceil(n));
 }
 
-IsingSolver::IsingSolver(const Graph& J, const vector<Weight>& h)
-  : random_selector(h.size()), active_ratio(1.0), J(J), revJ(reverse(J)), h(h) {}
-
 void IsingSolver::init(const IsingSolver::InitMode mode, const int seed, const double cool_coe, const double update_ratio) {
-  assert(J.size() == h.size());
+  assert(0 <= cool_coe && cool_coe < 1);
+  assert(0 <= update_ratio && update_ratio <= 1);
   rnd.seed(seed);
   this->cool_coe = cool_coe;
   this->update_ratio = update_ratio;
+  this->steps = 0;
+  this->total_step = calcTotalStep();
   switch (mode) {
     case Negative:
       current_spin.assign(size(), -1);
@@ -59,7 +62,7 @@ void IsingSolver::updateNodes() {
   }
 }
 void IsingSolver::updateNode(const int node_id) {
-  Weight energy_diff = calcEnergyDiff(current_spin, node_id);
+  Weight energy_diff = cf.calcEnergyDiff(getCurrentPer(), current_spin, node_id);
   if (energy_diff > 0) {
     current_spin[node_id] = -1;
   }
@@ -79,13 +82,14 @@ void IsingSolver::updateOptimalSpin() {
   }
 }
 void IsingSolver::step() {
+  cool();
   if (current_spin.size() != size()) {
     throw new runtime_error("call init method first");
   }
   randomFlip();
   updateNodes();
-  cool();
   updateOptimalSpin();
+  ++steps;
 }
 size_t IsingSolver::getActiveNodeCount() const {
   return size_t(floor(size() * active_ratio));
@@ -94,40 +98,26 @@ size_t IsingSolver::getUpdateNodeCount() const {
   return size_t(floor(size() * update_ratio));
 }
 size_t IsingSolver::size() const {
-  return h.size();
-}
-Weight IsingSolver::calcEnergyDiff(const vector<int>& spin, const int node_id) const {
-  Weight res = h[node_id];
-  for (auto&& e : J[node_id]) {
-    if (e.to == node_id) continue;
-    res += spin[e.to] * e.weight;
-  }
-  for (auto&& e : revJ[node_id]) {
-    if (e.to == node_id) continue;
-    res += spin[e.to] * e.weight;
-  }
-  return res;
-}
-Weight IsingSolver::calcEnergy(const vector<int>& spin) const {
-  assert(spin.size() == size());
-  Weight res{};
-  rep(i, size()) for (auto&& e : J[i]) {
-    res += spin[i] * spin[e.to] * e.weight;
-  }
-  rep(i, size()) {
-    res += spin[i] * h[i];
-  }
-  return res;
+  return cf.size();
 }
 Weight IsingSolver::getCurrentEnergy() const {
-  return calcEnergy(current_spin);
+  return cf.calcEnergy(getCurrentPer(), current_spin);
 }
 Weight IsingSolver::getOptimalEnergy() const {
-  return calcEnergy(optimal_spin);
+  return cf.calcEnergy(getCurrentPer(), optimal_spin);
 }
 const std::vector<int>& IsingSolver::getCurrentSpin() const {
   return current_spin;
 }
 const std::vector<int>& IsingSolver::getOptimalSpin() const {
   return optimal_spin;
+}
+int IsingSolver::getStep() const {
+  return steps;
+}
+int IsingSolver::getTotalStep() const {
+  return total_step;
+}
+double IsingSolver::getCurrentPer() const {
+  return min(1.0, double(getStep()) / getTotalStep());
 }

@@ -1,22 +1,11 @@
 #include "mylib.h"
 #include "problem.h"
 #include "ising_solver.h"
+#include "cost_function.h"
 #include <cassert>
 #include <complex>
 
 using namespace std;
-
-pair<Graph, vector<Weight>> ConvertTo01(const Graph& J, const vector<Weight>& h) {
-  assert(J.size() == h.size());
-  const int V = h.size();
-  vector<Weight> nh(V, 0);
-  rep(i, V) nh[i] += 2 * h[i];
-  rep(i, V) each(e, J[i]) {
-    nh[i] += e.weight;
-    nh[e.to] += e.weight;
-  }
-  return {J, move(nh)};
-}
 
 const Weight Base = 1e3;
 
@@ -37,29 +26,28 @@ Problem Problem::fromIstream(std::istream& is) {
   }
   return Problem(move(points));
 }
-std::pair<Graph, vector<Weight>> Problem::getJhForIsing() const {
+CostFunction Problem::getCostFunction() const {
   const int n = size();
-  Graph J(n * n);
-  vector<Weight> h(n * n, 0);
-  const Weight B = 1;
+  Graph J1(n * n), J2(n * n);
+  vector<Weight> h1(n * n, 0), h2(n * n, 0);
   rep(i, n) rep(j, n) rep(step, n) {
-    Weight dist = abs(points[i] - points[j]) * Base * B;
-    J[NODE(step, i)].emplace_back(
+    Weight dist = abs(points[i] - points[j]) * Base;
+    J1[NODE(step, i)].emplace_back(
       NODE((step+1)%n, j), dist
     );
   }
-  const Weight A = 1e6;
   rep(i, n) rep(j, n) rep(k, n) {
-    Weight cost = Base * A;
-    J[NODE(i, j)].emplace_back(
+    Weight cost = Base;
+    J2[NODE(i, j)].emplace_back(
       NODE(i, k), cost
     );
-    J[NODE(i, j)].emplace_back(
+    J2[NODE(i, j)].emplace_back(
       NODE(k, j), cost
     );
   }
-  rep(i, h.size()) h[i] -= 4 * Base * A;
-  return ConvertTo01(J, h);
+  rep(i, h2.size()) h2[i] -= 4 * Base;
+  // return CostFunction(J2, h2).to01();
+  return CostFunction(J1, h1, J2, h2, 1, 1e5).to01();
 }
 Answer Problem::getAnswerFromSpin(const vector<int>& spin) const {
   const int n = size();
@@ -83,10 +71,9 @@ bool Answer::verify() const {
   }
   return true;
 }
-// 465970
 Answer::Answer(const Problem& prob, const vector<int>& order) : prob(prob), order(order) {}
 void Answer::output(ostream& os, bool is_detail) const {
-  os << "order: ";
+  if (is_detail) os << "order: ";
   double sum = 0;
   if (order.size() > 0) {
     rep(i, order.size()+1) {
@@ -96,10 +83,10 @@ void Answer::output(ostream& os, bool is_detail) const {
       auto point = prob.points[order[i % order.size()]];
       if (is_detail) os << "(" << point.real() << ", " << point.imag() << ")";
     }
-    if (is_detail) os << endl;
     rep(i, order.size()) {
       sum += abs(prob.points[order[(i+1) % order.size()]] - prob.points[order[i]]);
     }
   }
+  if (is_detail) os << endl;
   os << "total distance: " << sum << endl;
 }

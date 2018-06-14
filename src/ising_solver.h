@@ -4,27 +4,18 @@
 #include <vector>
 #include <random>
 #include "random_selector.h"
-
-using Weight = long long;
-
-struct Edge {
-  int to;
-  Weight weight;
-  Edge(int to, Weight weight);
-};
-
-using Graph = std::vector<std::vector<Edge>>;
+#include "cost_function.h"
 
 // minimize: Σs_i s_j J_{ij} + Σs_i h_i
 // s := current_spin
 // s_i: {-1, 1}
 class IsingSolver {
+  int steps, total_step;
   double cool_coe, update_ratio;
   std::mt19937 rnd;
   RandomSelector random_selector;
   double active_ratio; // 温度: [0, 1]
-  Graph J, revJ; // Σs_i s_j J_{ij}
-  std::vector<Weight> h; // Σs_i h_i
+  const CostFunction cf;
   std::vector<int> current_spin, optimal_spin;
   Weight calcEnergyDiff(const std::vector<int>& spin, const int node_id) const;
   Weight calcEnergy(const std::vector<int>& spin) const;
@@ -38,13 +29,14 @@ class IsingSolver {
   void cool();
   // より良い解が見つかったら optimal_spin を更新
   void updateOptimalSpin();
+  int calcTotalStep() const;
 public:
   enum InitMode {
     Negative, Positive, Random
   };
-  IsingSolver(const Graph& J, const std::vector<Weight>& h);
+  IsingSolver(const CostFunction& cf);
   Weight getCurrentEnergy() const;
-  Weight getOptimalEnergy() const;
+  Weight getOptimalEnergy() const; // ただし現在の目的関数で計算
   const std::vector<int>& getCurrentSpin() const;
   const std::vector<int>& getOptimalSpin() const;
   void step();
@@ -53,6 +45,9 @@ public:
   size_t getActiveNodeCount() const;
   size_t getUpdateNodeCount() const;
   size_t size() const;
+  int getStep() const;
+  int getTotalStep() const;
+  double getCurrentPer() const;
 };
 
 #endif

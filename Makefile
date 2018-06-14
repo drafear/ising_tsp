@@ -1,10 +1,10 @@
-DEPENDENCIES := src/main.o src/mylib.o src/problem.o src/ising_solver.o src/random_selector.o
+DEPENDENCIES := src/main.o src/cost_function.o src/mylib.o src/problem.o src/ising_solver.o src/random_selector.o
 TARGET := ising
 
 all: $(TARGET)
 
 $(TARGET): $(DEPENDENCIES)
-	g++ $^ -o $@
+	g++ -O2 $^ -o $@
 
 %.o: %.cpp
 	g++ -std=c++14 -Wall -O2 -c $^ -o $@

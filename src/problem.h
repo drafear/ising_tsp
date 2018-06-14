@@ -12,7 +12,7 @@ public:
   Problem(std::vector<std::complex<double>>&& points);
   size_t size() const;
   static Problem fromIstream(std::istream& is);
-  std::pair<Graph, std::vector<Weight>> getJhForIsing() const;
+  CostFunction getCostFunction() const;
   Answer getAnswerFromSpin(const std::vector<int>& spin) const;
 };
 class Answer {
