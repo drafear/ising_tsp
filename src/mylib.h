@@ -34,5 +34,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<T>>& ve
     }
     return os;
 }
+const double eps = 1e-12;
 
 #endif

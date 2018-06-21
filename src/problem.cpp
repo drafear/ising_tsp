@@ -7,10 +7,6 @@
 
 using namespace std;
 
-const Weight Base = 1e3;
-
-#define NODE(step, v) (n * (step) + (v))
-
 vector<complex<double>> points;
 Problem::Problem(vector<complex<double>>&& points) : points(points) {}
 size_t Problem::size() const {
@@ -25,42 +21,6 @@ Problem Problem::fromIstream(std::istream& is) {
     points.emplace_back(x, y);
   }
   return Problem(move(points));
-}
-CostFunction Problem::getCostFunction() const {
-  const int n = size();
-  Graph J1(n * n), J2(n * n);
-  vector<Weight> h1(n * n, 0), h2(n * n, 0);
-  rep(i, n) rep(j, n) rep(step, n) {
-    Weight dist = abs(points[i] - points[j]) * Base;
-    J1[NODE(step, i)].emplace_back(
-      NODE((step+1)%n, j), dist
-    );
-  }
-  rep(i, n) rep(j, n) rep(k, n) {
-    Weight cost = Base;
-    J2[NODE(i, j)].emplace_back(
-      NODE(i, k), cost
-    );
-    J2[NODE(i, j)].emplace_back(
-      NODE(k, j), cost
-    );
-  }
-  rep(i, h2.size()) h2[i] -= 4 * Base;
-  // return CostFunction(J2, h2).to01();
-  return CostFunction(J1, h1, J2, h2, 1, 1e5).to01();
-}
-Answer Problem::getAnswerFromSpin(const vector<int>& spin) const {
-  const int n = size();
-  vector<int> order;
-  rep(step, n) rep(v, n) {
-    assert(NODE(step, v) >= 0);
-    assert(NODE(step, v) < int(spin.size()));
-    if (spin[NODE(step, v)] > 0) {
-      order.push_back(v);
-      break;
-    }
-  }
-  return Answer(*this, move(order));
 }
 bool Answer::verify() const {
   if (order.size() != prob.size()) return false;

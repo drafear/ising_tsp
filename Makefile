@@ -1,4 +1,4 @@
-DEPENDENCIES := src/main.o src/cost_function.o src/mylib.o src/problem.o src/ising_solver.o src/random_selector.o
+DEPENDENCIES := src/main.o src/cost_function.o src/mylib.o src/problem.o src/ising_solver.o src/random_selector.o src/mid.o src/mid_grid.o
 TARGET := ising
 
 all: $(TARGET)

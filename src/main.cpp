@@ -1,6 +1,8 @@
 #include "mylib.h"
 #include "problem.h"
 #include "ising_solver.h"
+#include "mid.h"
+#include "mid_grid.h"
 #include "lib/cmdline.h"
 
 #include <iostream>
@@ -16,8 +18,9 @@ void run(const cmdline::parser& parser) {
     cerr << "can't open the file: " << input_file_path << endl;
     exit(1);
   }
-  const Problem prob = Problem::fromIstream(ifs);
-  const CostFunction cf = prob.getCostFunction();
+  MidWithGrid mid(Problem::fromIstream(ifs), 8);
+  // Mid mid(Problem::fromIstream(ifs));
+  const CostFunction cf = mid.getCostFunction();
   IsingSolver solver(cf);
   solver.init(IsingSolver::InitMode::Random, parser.get<double>("cool"), parser.get<double>("update-ratio"));
   bool is_detail = parser.exist("detail");
@@ -30,7 +33,7 @@ void run(const cmdline::parser& parser) {
     cout << "energy: " << solver.getCurrentEnergy() << endl;
     if (is_detail) cout << "spin: " << solver.getCurrentSpin() << endl;
     cout << "flip: " << solver.getActiveNodeCount() << " / " << solver.size() << endl;
-    Answer ans = prob.getAnswerFromSpin(solver.getCurrentSpin());
+    Answer ans = mid.getAnswerFromSpin(solver.getCurrentSpin());
     ans.output(cout, is_detail);
     cout << "is_answer: " << boolalpha << ans.verify() << endl;
     cout << endl;
@@ -38,7 +41,7 @@ void run(const cmdline::parser& parser) {
   cout << "[Answer]" << endl;
   cout << "energy: " << solver.getOptimalEnergy() << endl;
   if (is_detail) cout << "spin: " << solver.getOptimalSpin() << endl;
-  Answer ans = prob.getAnswerFromSpin(solver.getOptimalSpin());
+  Answer ans = mid.getAnswerFromSpin(solver.getOptimalSpin());
   ans.output(cout, true);
   cout << "is_answer: " << boolalpha << ans.verify() << endl;
 }
