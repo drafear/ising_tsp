@@ -18,7 +18,6 @@ class IsingSolver {
   const CostFunction cf;
   std::vector<int> current_spin, optimal_spin;
   Weight calcEnergyDiff(const std::vector<int>& spin, const int node_id) const;
-  Weight calcEnergy(const std::vector<int>& spin) const;
   // active_ratio に応じた個数をランダムに current_spin を反転させる
   void randomFlip();
   // active_ratio に応じた個数をランダムな順番で updateNode する
@@ -37,8 +36,10 @@ public:
   IsingSolver(const CostFunction& cf);
   Weight getCurrentEnergy() const;
   Weight getOptimalEnergy() const; // ただし現在の目的関数で計算
+  Weight calcEnergy(const std::vector<int>& spin) const;
   const std::vector<int>& getCurrentSpin() const;
   const std::vector<int>& getOptimalSpin() const;
+  void setCurrentSpin(const std::vector<int>& new_spin);
   void step();
   void init(const InitMode mode, const double cool_coe, const double update_ratio);
   void init(const InitMode mode, const int seed, const double cool_coe, const double update_ratio);

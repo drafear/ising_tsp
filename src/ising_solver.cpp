@@ -100,17 +100,24 @@ size_t IsingSolver::getUpdateNodeCount() const {
 size_t IsingSolver::size() const {
   return cf.size();
 }
+Weight IsingSolver::calcEnergy(const std::vector<int>& spin) const {
+  return cf.calcEnergy(getCurrentPer(), spin);
+}
 Weight IsingSolver::getCurrentEnergy() const {
-  return cf.calcEnergy(getCurrentPer(), current_spin);
+  return calcEnergy(current_spin);
 }
 Weight IsingSolver::getOptimalEnergy() const {
-  return cf.calcEnergy(getCurrentPer(), optimal_spin);
+  return calcEnergy(optimal_spin);
 }
-const std::vector<int>& IsingSolver::getCurrentSpin() const {
+const vector<int>& IsingSolver::getCurrentSpin() const {
   return current_spin;
 }
-const std::vector<int>& IsingSolver::getOptimalSpin() const {
+const vector<int>& IsingSolver::getOptimalSpin() const {
   return optimal_spin;
+}
+void IsingSolver::setCurrentSpin(const vector<int>& new_spin) {
+  assert(current_spin.size() == new_spin.size());
+  current_spin = new_spin;
 }
 int IsingSolver::getStep() const {
   return steps;

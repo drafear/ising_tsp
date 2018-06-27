@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cassert>
 #include <tuple>
 
 using namespace std;
@@ -18,30 +19,56 @@ void run(const cmdline::parser& parser) {
     cerr << "can't open the file: " << input_file_path << endl;
     exit(1);
   }
-  MidWithGrid mid(Problem::fromIstream(ifs), parser.get<int>("grid"));
   // Mid mid(Problem::fromIstream(ifs));
+  MidWithGrid mid(Problem::fromIstream(ifs), parser.get<int>("grid"));
+  // solvers[0] is the main solver
+  // solvers[1..] is the sub solvers with different cool coefficient
   const CostFunction cf = mid.getCostFunction();
-  IsingSolver solver(cf);
-  solver.init(IsingSolver::InitMode::Random, parser.get<double>("cool"), parser.get<double>("update-ratio"));
+  const int swidth = parser.get<int>("swidth");
+  const double base_cool = parser.get<double>("cool");
+  vector<IsingSolver> solvers;
+  int main_solver_idx = -1;
+  rep(i, -swidth, swidth+1) {
+    const double cool = base_cool * pow(base_cool, 0.1 * i);
+    if (0 <= cool && cool < 1) {
+      if (i == 0) main_solver_idx = solvers.size();
+      IsingSolver solver(cf);
+      solver.init(IsingSolver::InitMode::Random, cool, parser.get<double>("update-ratio"));
+      solvers.push_back(move(solver));
+    }
+  }
+  assert(main_solver_idx >= 0);
+  const IsingSolver& main_solver = solvers[main_solver_idx];
+  // solve
   bool is_detail = parser.exist("detail");
   const int ExtraStepCount = 10;
   bool is_first = true;
-  while (solver.getStep() < solver.getTotalStep()+ExtraStepCount) {
-    if (!is_first) solver.step();
+  while (main_solver.getStep() < main_solver.getTotalStep()+ExtraStepCount) {
+    if (!is_first) {
+      for (auto&& solver : solvers) {
+        solver.step();
+      }
+      // solver間で状態を共有
+      for (auto&& base_solver : solvers) for (auto&& ref_solver : solvers) {
+        if (base_solver.calcEnergy(ref_solver.getCurrentSpin()) < base_solver.getCurrentEnergy()) {
+          base_solver.setCurrentSpin(ref_solver.getCurrentSpin());
+        }
+      }
+    }
     else is_first = false;
-    cout << "[Step " << solver.getStep() << " / " << solver.getTotalStep()+ExtraStepCount << "]" << endl;
-    cout << "energy: " << solver.getCurrentEnergy() << endl;
-    if (is_detail) cout << "spin: " << solver.getCurrentSpin() << endl;
-    cout << "flip: " << solver.getActiveNodeCount() << " / " << solver.size() << endl;
-    Answer ans = mid.getAnswerFromSpin(solver.getCurrentSpin());
+    cout << "[Step " << main_solver.getStep() << " / " << main_solver.getTotalStep()+ExtraStepCount << "]" << endl;
+    cout << "energy: " << main_solver.getCurrentEnergy() << endl;
+    if (is_detail) cout << "spin: " << main_solver.getCurrentSpin() << endl;
+    cout << "flip: " << main_solver.getActiveNodeCount() << " / " << main_solver.size() << endl;
+    Answer ans = mid.getAnswerFromSpin(main_solver.getCurrentSpin());
     ans.output(cout, is_detail);
     cout << "is_answer: " << boolalpha << ans.verify() << endl;
     cout << endl;
   }
   cout << "[Answer]" << endl;
-  cout << "energy: " << solver.getOptimalEnergy() << endl;
-  if (is_detail) cout << "spin: " << solver.getOptimalSpin() << endl;
-  Answer ans = mid.getAnswerFromSpin(solver.getOptimalSpin());
+  cout << "energy: " << main_solver.getOptimalEnergy() << endl;
+  if (is_detail) cout << "spin: " << main_solver.getOptimalSpin() << endl;
+  Answer ans = mid.getAnswerFromSpin(main_solver.getOptimalSpin());
   ans.output(cout, true);
   cout << "is_answer: " << boolalpha << ans.verify() << endl;
 }
@@ -50,6 +77,7 @@ cmdline::parser get_command_line_parser() {
   parser.add<double>("cool", 'c', "coefficient of cooling", false, 0.999);
   parser.add<double>("update-ratio", 'u', "the ratio of nodes to update in 1 step", false, 0.3);
   parser.add<int>("grid", 'g', "width and height of the grid", false, 8);
+  parser.add<int>("swidth", 's', "the max number of sub solvers / 2", false, 2);
   parser.add("detail", 'd', "print log in detail");
   parser.footer("filename");
   return parser;
