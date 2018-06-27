@@ -18,7 +18,7 @@ void run(const cmdline::parser& parser) {
     cerr << "can't open the file: " << input_file_path << endl;
     exit(1);
   }
-  MidWithGrid mid(Problem::fromIstream(ifs), 8);
+  MidWithGrid mid(Problem::fromIstream(ifs), parser.get<int>("grid"));
   // Mid mid(Problem::fromIstream(ifs));
   const CostFunction cf = mid.getCostFunction();
   IsingSolver solver(cf);
@@ -49,6 +49,7 @@ cmdline::parser get_command_line_parser() {
   cmdline::parser parser;
   parser.add<double>("cool", 'c', "coefficient of cooling", false, 0.999);
   parser.add<double>("update-ratio", 'u', "the ratio of nodes to update in 1 step", false, 0.3);
+  parser.add<int>("grid", 'g', "width and height of the grid", false, 8);
   parser.add("detail", 'd', "print log in detail");
   parser.footer("filename");
   return parser;
