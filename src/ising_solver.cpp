@@ -12,23 +12,24 @@ Edge::Edge(int to, Weight weight) : to(to), weight(weight) {}
 
 IsingSolver::IsingSolver(const CostFunction& cf)
   : steps(0), total_step(0),
-    random_selector(cf.size()), active_ratio(1.0), cf(cf) {}
+    random_selector(cf.size()), active_ratio(0), cf(cf) {}
 
-int IsingSolver::calcTotalStep() const {
-  // return n s.t. size() * cool_coe^n < 1
-  double n = - log(size()) / log(cool_coe);
+int IsingSolver::calcTotalStep(double initial_active_ratio) const {
+  // return n s.t. initial_active_ratio * size() * cool_coe^n < 1
+  double n = - (log(initial_active_ratio) + log(size())) / log(cool_coe);
   assert(n >= 0);
   return int(ceil(n));
 }
 
-void IsingSolver::init(const IsingSolver::InitMode mode, const int seed, const double cool_coe, const double update_ratio) {
+void IsingSolver::init(const IsingSolver::InitMode mode, const int seed, const double cool_coe, const double update_ratio, const double initial_active_ratio) {
   assert(0 <= cool_coe && cool_coe < 1);
   assert(0 <= update_ratio && update_ratio <= 1);
   rnd.seed(seed);
   this->cool_coe = cool_coe;
   this->update_ratio = update_ratio;
   this->steps = 0;
-  this->total_step = calcTotalStep();
+  this->active_ratio = initial_active_ratio;
+  this->total_step = calcTotalStep(initial_active_ratio);
   switch (mode) {
     case Negative:
       current_spin.assign(size(), -1);
@@ -45,14 +46,21 @@ void IsingSolver::init(const IsingSolver::InitMode mode, const int seed, const d
   }
   optimal_spin = current_spin;
 }
-void IsingSolver::init(const IsingSolver::InitMode mode, const double cool_coe, const double update_ratio) {
+void IsingSolver::init(const IsingSolver::InitMode mode, const double cool_coe, const double update_ratio, const double initial_active_ratio) {
   random_device rd;
-  init(mode, rd(), cool_coe, update_ratio);
+  init(mode, rd(), cool_coe, update_ratio, initial_active_ratio);
 }
 void IsingSolver::randomFlip() {
   vector<int> node_ids = random_selector.select(getActiveNodeCount(), rnd);
   for (auto&& node_id : node_ids) {
-    current_spin[node_id] *= -1;
+    current_spin[node_id] = 1;
+    if (current_spin[node_id] > 0) {
+      for (auto&& e : cf.J2[node_id]) {
+        // if (int(rnd() % 100) * getTotalStep() < getStep() * 100 * 5) {
+          current_spin[e.to] = -1;
+        // }
+      }
+    }
   }
 }
 void IsingSolver::updateNodes() {

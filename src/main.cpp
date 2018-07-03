@@ -20,12 +20,14 @@ void run(const cmdline::parser& parser) {
     exit(1);
   }
   // Mid mid(Problem::fromIstream(ifs));
-  MidWithGrid mid(Problem::fromIstream(ifs), parser.get<int>("grid"));
+  Mid mid = parser.get<int>("grid") == 1 ? Mid(Problem::fromIstream(ifs))
+    : MidWithGrid(Problem::fromIstream(ifs), parser.get<int>("grid"));
   // solvers[0] is the main solver
   // solvers[1..] is the sub solvers with different cool coefficient
   const CostFunction cf = mid.getCostFunction();
   const int swidth = parser.get<int>("swidth");
   const double base_cool = parser.get<double>("cool");
+  const double initial_active_ratio = min(1., 1. / sqrt(double(cf.size())));
   vector<IsingSolver> solvers;
   int main_solver_idx = -1;
   rep(i, -swidth, swidth+1) {
@@ -33,7 +35,7 @@ void run(const cmdline::parser& parser) {
     if (0 <= cool && cool < 1) {
       if (i == 0) main_solver_idx = solvers.size();
       IsingSolver solver(cf);
-      solver.init(IsingSolver::InitMode::Random, cool, parser.get<double>("update-ratio"));
+      solver.init(IsingSolver::InitMode::Random, cool, parser.get<double>("update-ratio"), initial_active_ratio);
       solvers.push_back(move(solver));
     }
   }

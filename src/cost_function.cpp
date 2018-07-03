@@ -65,8 +65,8 @@ Weight CostFunction::getCurrentA(const double per) const {
 }
 Weight CostFunction::getCurrentB(const double per) const {
   assert(0 <= per && per <= 1);
-  return B * per;
-  // return B;
+  // return B * per;
+  return B;
 }
 
 pair<Graph, vector<Weight>> to01(const Graph& J, const vector<Weight>& h) {

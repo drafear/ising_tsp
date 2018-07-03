@@ -28,7 +28,7 @@ class IsingSolver {
   void cool();
   // より良い解が見つかったら optimal_spin を更新
   void updateOptimalSpin();
-  int calcTotalStep() const;
+  int calcTotalStep(double initial_active_ratio) const;
 public:
   enum InitMode {
     Negative, Positive, Random
@@ -41,8 +41,8 @@ public:
   const std::vector<int>& getOptimalSpin() const;
   void setCurrentSpin(const std::vector<int>& new_spin);
   void step();
-  void init(const InitMode mode, const double cool_coe, const double update_ratio);
-  void init(const InitMode mode, const int seed, const double cool_coe, const double update_ratio);
+  void init(const InitMode mode, const double cool_coe, const double update_ratio, const double initial_active_ratio);
+  void init(const InitMode mode, const int seed, const double cool_coe, const double update_ratio, const double initial_active_ratio);
   size_t getActiveNodeCount() const;
   size_t getUpdateNodeCount() const;
   size_t size() const;

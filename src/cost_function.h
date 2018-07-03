@@ -15,10 +15,10 @@ struct Edge {
 using Graph = std::vector<std::vector<Edge>>;
 
 class CostFunction {
+public:
   const Graph J1, J2, revJ1, revJ2;
   const std::vector<Weight> h1, h2;
   const Weight A, B;
-public:
   CostFunction(const Graph& J1, const std::vector<Weight>& h1, const Graph& J2, const std::vector<Weight>& h2, const Weight A, const Weight B);
   CostFunction(const Graph& J, const std::vector<Weight>& h);
   size_t size() const;

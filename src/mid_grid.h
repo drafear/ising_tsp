@@ -16,6 +16,7 @@ public:
   ~MidWithGrid();
   CostFunction getCostFunction();
   Answer getAnswerFromSpin(const std::vector<int>& spin) const;
+  // vector<int> getSpinFromAnswer(
 };
 
 #endif
